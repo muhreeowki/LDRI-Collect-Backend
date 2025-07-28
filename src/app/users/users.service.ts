@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { Prisma, User } from '@prisma/client/ldri/index.js';
 import * as bcrypt from 'bcrypt';
@@ -50,5 +50,29 @@ export class UsersService {
         id,
       },
     });
+  }
+
+  async validateUser(id: number, adminId: number): Promise<User> {
+    const admin = await this.prisma.admin.findUnique({
+      where: { id: adminId },
+    });
+
+    if (admin === null) {
+      throw new UnauthorizedException(
+        'You are not authorized to perform this action'
+      );
+    }
+
+    return this.prisma.user.update({
+      where: { id },
+      data: { valid: true },
+    });
+  }
+
+  async isValidUser(id: number): Promise<boolean> {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+    });
+    return user !== null && user.valid;
   }
 }

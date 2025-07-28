@@ -9,14 +9,14 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { DelegatesService } from './delegates.service';
-import { AuthGuard } from '../auth/auth.guard';
+import { NormalAuthGuard } from '../auth/auth.guard';
 import { CreateDelegateDto } from './dto/create-delegate.dto';
 
 @Controller('delegates')
 export class DelegatesController {
   constructor(private readonly delegatesService: DelegatesService) {}
 
-  @UseGuards(AuthGuard)
+  @UseGuards(NormalAuthGuard)
   @Post()
   create(@Body() createDelegateDto: CreateDelegateDto, @Request() req: any) {
     const user = req.user || undefined;
@@ -26,7 +26,7 @@ export class DelegatesController {
     return this.delegatesService.create(createDelegateDto, user.sub);
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(NormalAuthGuard)
   @Post('many')
   createMany(
     @Body() createDelegateDto: CreateDelegateDto[],
