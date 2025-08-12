@@ -2,6 +2,7 @@ import {
   CanActivate,
   ExecutionContext,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -14,7 +15,7 @@ export class NormalAuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const token = this.extractTokenFromHeader(request);
+    const token = extractTokenFromHeader(request);
     if (!token) {
       throw new UnauthorizedException();
     }
@@ -28,11 +29,6 @@ export class NormalAuthGuard implements CanActivate {
     }
     return true;
   }
-
-  private extractTokenFromHeader(request: Request): string | undefined {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    return type === 'Bearer' ? token : undefined;
-  }
 }
 
 @Injectable()
@@ -42,26 +38,31 @@ export class AdminAuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const token = this.extractTokenFromHeader(request);
+    const token = extractTokenFromHeader(request);
     if (!token) {
       throw new UnauthorizedException();
     }
     try {
       const payload = await this.jwtService.verifyAsync(token, {
         secret: jwtConstants.secret,
+        audience: 'ldri',
+        issuer: 'ldri',
+        algorithms: ['HS256'],
       });
       if (!payload.isAdmin) {
         throw new UnauthorizedException('Access denied');
       }
       request['admin'] = payload;
-    } catch {
+      Logger.debug('Admin payload:', payload);
+    } catch (error: any) {
+      Logger.error('Error verifying token:', error);
       throw new UnauthorizedException('Invalid token');
     }
     return true;
   }
+}
 
-  private extractTokenFromHeader(request: Request): string | undefined {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    return type === 'Bearer' ? token : undefined;
-  }
+function extractTokenFromHeader(request: Request): string | undefined {
+  const [type, token] = request.headers.authorization?.split(' ') ?? [];
+  return type === 'Bearer' ? token : undefined;
 }
