@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { FormsService } from './forms.service';
 import { PrismaService } from '../prisma.service';
+import { Prisma } from '@prisma/client/ldri/index.js';
 
 describe('FormsService', () => {
   let service: FormsService;
@@ -18,7 +19,7 @@ describe('FormsService', () => {
   });
 
   it('should create a form', async () => {
-    const createFormDto = {
+    const createFormDto: Prisma.FormCreateInput = {
       id: 'form1',
       Q_1_1: 'Answer 1.1 - A',
       Q_1_2: 'Answer 1.2 - A',

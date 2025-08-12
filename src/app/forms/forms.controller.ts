@@ -1,17 +1,31 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
 import { FormsService } from './forms.service';
 import { Prisma } from '@prisma/client/ldri/index.js';
+import { AdminAuthGuard, NormalAuthGuard } from '../auth/auth.guard';
+import { DelegatesService } from '../delegates/delegates.service';
 
 @Controller('forms')
 export class FormsController {
-  constructor(private readonly formsService: FormsService) {}
+  constructor(
+    private readonly formsService: FormsService,
+    private readonly delegateService: DelegatesService
+  ) {}
 
-  @Post()
-  create(@Body() data: Prisma.FormCreateInput) {
-    return this.formsService.create(data);
+  @Post(':formSubmissionCode')
+  async create(
+    @Body() data: Prisma.FormCreateInput,
+    @Param('formSubmissionCode') formSubmissionCode: string
+  ) {
+    // Get the delegate with the formSubmissionCode
+    const delegate = await this.delegateService.findOne(formSubmissionCode);
+    if (!delegate) {
+      throw new Error('Delegate not found with the provided submission code');
+    }
+    return this.formsService.create(data, delegate);
   }
 
   @Get()
+  //@UseGuards(AdminAuthGuard)
   findAll() {
     return this.formsService.findAll();
   }
