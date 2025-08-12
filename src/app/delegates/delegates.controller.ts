@@ -44,8 +44,8 @@ export class DelegatesController {
     return this.delegatesService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.delegatesService.findOne(+id);
+  @Get(':formSubmissionCode')
+  findOne(@Param('formSubmissionCode') formSubmissionCode: string) {
+    return this.delegatesService.findOne(formSubmissionCode);
   }
 }

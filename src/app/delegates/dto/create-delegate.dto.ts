@@ -11,5 +11,9 @@ export class CreateDelegateDto {
 
   @IsString()
   @IsNotEmpty()
+  phone: string;
+
+  @IsString()
+  @IsNotEmpty()
   department: string;
 }

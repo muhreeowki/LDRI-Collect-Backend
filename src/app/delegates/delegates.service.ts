@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { Prisma } from '@prisma/client/ldri/index.js';
 import { CreateDelegateDto } from './dto/create-delegate.dto';
+import { v4 as uuidv4 } from 'uuid';
 
 // TODO: When delegates are created, they should receive an email
 // with a link to fill in the bridge form. The email should include
@@ -18,9 +19,12 @@ export class DelegatesService {
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
+    const formSubmissionCode = uuidv4();
     const delegate: Prisma.DelegateCreateInput = {
       name: data.name,
+      formSubmissionCode,
       email: data.email,
+      phone: data.phone,
       department: data.department,
       county: user.county,
       supervisor: { connect: { id: userId } },
@@ -30,6 +34,7 @@ export class DelegatesService {
     });
 
     // TODO: Send email to delegate with submission code
+    console.log('Delegate created:', delegateCreated);
 
     return delegateCreated;
   }
@@ -41,13 +46,18 @@ export class DelegatesService {
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
-    const delegates: Prisma.DelegateCreateManyInput[] = data.map((item) => ({
-      name: item.name,
-      email: item.email,
-      department: item.department,
-      county: user.county,
-      userId: userId,
-    }));
+    const delegates: Prisma.DelegateCreateManyInput[] = data.map((item) => {
+      const formSubmissionCode = uuidv4();
+      return {
+        formSubmissionCode,
+        name: item.name,
+        email: item.email,
+        phone: item.phone,
+        department: item.department,
+        county: user.county,
+        userId: userId,
+      };
+    });
     const delegatesCreated = await this.prisma.delegate.createMany({
       data: delegates,
     });
@@ -61,9 +71,9 @@ export class DelegatesService {
     return this.prisma.delegate.findMany();
   }
 
-  findOne(id: number) {
+  findOne(formSubmissionCode: string) {
     return this.prisma.delegate.findUnique({
-      where: { id },
+      where: { formSubmissionCode },
     });
   }
 }
