@@ -7,7 +7,7 @@ export class FormsService {
   constructor(private prisma: PrismaService) {}
 
   create(data: Prisma.FormCreateInput, delegate: Delegate): Promise<Form> {
-    return this.prisma.form.create({
+    const form = this.prisma.form.create({
       data: {
         ...data,
         delegate: {
@@ -28,6 +28,9 @@ export class FormsService {
         },
       },
     });
+
+    // TODO: send email to Supervisor with form submission code to view the completed form
+    return form;
   }
 
   findAll(): Promise<Form[]> {

@@ -21,12 +21,16 @@ export class UsersService {
     ) {
       passwordHash = bcrypt.hashSync(createUserDto.password, salt);
     }
-    return this.prisma.user.create({
+    const user = this.prisma.user.create({
       data: { ...createUserDto, password: passwordHash },
       omit: {
         password: true,
       },
     });
+
+    // TODO: send email to admin to validate the user.
+
+    return user;
   }
 
   findAll() {
@@ -101,7 +105,7 @@ export class UsersService {
 
   async validateUser(id: number): Promise<User> {
     console.log('Validating user with ID:', id);
-    return this.prisma.user.update({
+    const res = this.prisma.user.update({
       where: {
         id,
         valid: false, // Only update if the user is not already valid
@@ -110,6 +114,8 @@ export class UsersService {
         valid: true,
       },
     });
+    // TODO: send email to user notifying them of validation
+    return res;
   }
 
   async isValidUser(id: number): Promise<boolean> {

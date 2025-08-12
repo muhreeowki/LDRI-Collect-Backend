@@ -48,4 +48,9 @@ export class DelegatesController {
   findOne(@Param('formSubmissionCode') formSubmissionCode: string) {
     return this.delegatesService.findOne(formSubmissionCode);
   }
+
+  @Post('verify')
+  verifyCode(@Body('formSubmissionCode') formSubmissionCode: string) {
+    return this.delegatesService.verifyCode(formSubmissionCode);
+  }
 }

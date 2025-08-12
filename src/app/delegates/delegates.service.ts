@@ -33,7 +33,7 @@ export class DelegatesService {
       data: delegate,
     });
 
-    // TODO: Send email to delegate with submission code
+    // TODO: Send email to delegate with form submission code
     console.log('Delegate created:', delegateCreated);
 
     return delegateCreated;
@@ -62,7 +62,7 @@ export class DelegatesService {
       data: delegates,
     });
 
-    // TODO: Loop through created delegates and send emails
+    // TODO: Loop through created delegates and send emails with form submission codes
 
     return delegatesCreated;
   }
@@ -75,5 +75,22 @@ export class DelegatesService {
     return this.prisma.delegate.findUnique({
       where: { formSubmissionCode },
     });
+  }
+
+  async verifyCode(formSubmissionCode: string) {
+    console.log('Verifying code:', formSubmissionCode);
+    const delegate = await this.prisma.delegate.findUnique({
+      where: { formSubmissionCode: formSubmissionCode },
+    });
+    if (!delegate) {
+      throw new UnauthorizedException('Invalid Form Submission Code');
+    }
+    const form = await this.prisma.form.findUnique({
+      where: { formSubmissionCode: formSubmissionCode },
+    });
+    if (form != null && form.completed) {
+      throw new UnauthorizedException('Form already completed');
+    }
+    return delegate;
   }
 }
