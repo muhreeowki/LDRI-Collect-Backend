@@ -8,6 +8,7 @@ import {
   UseGuards,
   Request,
   UnauthorizedException,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { Prisma } from '@prisma/client/ldri/index.js';
@@ -26,59 +27,45 @@ export class UsersController {
     return this.usersService.create(data);
   }
 
-  //@UseGuards(AdminAuthGuard)
   @Get()
+  @UseGuards(NormalAuthGuard)
   findAll() {
     return this.usersService.findAll();
   }
 
-  //@UseGuards(NormalAuthGuard)
-  @Get(':id')
-  findOneById(@Param('id') id: string, @Request() req: any) {
-    // if (req.user?.sub !== +id) {
-    //   throw new UnauthorizedException(
-    //     'You are not authorized to access this user'
-    //   );
-    // }
-    return this.usersService.findOneById(+id);
+  @Get('delegates')
+  @UseGuards(NormalAuthGuard)
+  async getDelegates(@Request() req: any) {
+    const user = await this.usersService.findOneById(req.user.sub);
+    if (!user) {
+      throw new UnauthorizedException('You are not authorized');
+    }
+    return this.usersService.getDelegates(user.id);
   }
 
-  //@UseGuards(NormalAuthGuard)
-  @Get(':id/delegates')
-  getDelegates(@Param('id') id: string, @Request() req: any) {
-    // if (req.user?.sub !== +id) {
-    //   throw new UnauthorizedException(
-    //     'You are not authorized to access this user'
-    //   );
-    // }
-    return this.usersService.getDelegates(+id);
+  @Get('forms')
+  @UseGuards(NormalAuthGuard)
+  async getForms(@Request() req: any) {
+    const user = await this.usersService.findOneById(req.user.sub);
+    if (!user) {
+      throw new UnauthorizedException('You are not authorized');
+    }
+    return this.usersService.getForms(user.id);
   }
 
-  //@UseGuards(NormalAuthGuard)
-  @Get(':id/forms')
-  getForms(@Param('id') id: string, @Request() req: any) {
-    // if (req.user?.sub !== +id) {
-    //   throw new UnauthorizedException(
-    //     'You are not authorized to access this user'
-    //   );
-    // }
-    return this.usersService.getForms(+id);
-  }
-
-  //@UseGuards(NormalAuthGuard)
-  @Get(':id/dashboard')
-  getDashboardData(@Param('id') id: string, @Request() req: any) {
-    // if (req.user?.sub !== +id) {
-    //   throw new UnauthorizedException(
-    //     'You are not authorized to access this user'
-    //   );
-    // }
-    return this.usersService.getUserDashboardData(+id);
+  @Get('dashboard')
+  @UseGuards(NormalAuthGuard)
+  async getDashboardData(@Request() req: any) {
+    const user = await this.usersService.findOneById(req.user.sub);
+    if (!user) {
+      throw new UnauthorizedException('You are not authorized');
+    }
+    return this.usersService.getUserDashboardData(user.id);
   }
 
   @UseGuards(AdminAuthGuard)
   @Put('validate/:id')
-  async validateUser(@Param('id') id: string, @Request() req: any) {
+  async validateUser(@Param('id', ParseIntPipe) id: number, @Request() req: any) {
     const adminId = req.admin?.sub;
     if (!adminId) {
       throw new UnauthorizedException(
@@ -91,6 +78,13 @@ export class UsersController {
         'You are not authorized to perform this action'
       );
     }
-    return this.usersService.validateUser(+id);
+    return this.usersService.validateUser(id);
+  }
+
+  // Keep parameterized route last so it doesn't catch specific routes like 'forms'/'delegates'
+  @Get(':id')
+  @UseGuards(NormalAuthGuard)
+  findOneById(@Param('id', ParseIntPipe) id: number) {
+    return this.usersService.findOneById(id);
   }
 }

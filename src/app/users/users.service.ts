@@ -46,8 +46,8 @@ export class UsersService {
   }
 
   findOne(email: string) {
-    return this.prisma.user.findUnique({
-      where: { email },
+    return this.prisma.user.findFirst({
+      where: { email: email },
       include: {
         _count: true,
       },
@@ -56,27 +56,93 @@ export class UsersService {
 
   findOneById(id: number) {
     return this.prisma.user.findUnique({
-      where: { id },
+      where: { id: id },
       include: {
         _count: true,
       },
     });
   }
 
-  getDelegates(id: number) {
-    return this.prisma.delegate.findMany({ where: { userId: id } });
+  async getDelegates(id: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      include: { Delegates: true },
+      omit: {
+        password: true,
+      },
+    });
+    if (user === null) {
+      throw new UnauthorizedException('User not found');
+    }
+    return user.Delegates;
   }
 
-  getForms(id: number) {
-    return this.prisma.form.findMany({ where: { userId: id } });
+  async getForms(id: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      include: {
+        FormSubmissions: {
+          include: {
+            delegate: true,
+          },
+        },
+      },
+      omit: {
+        password: true,
+      },
+    });
+    if (user === null) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    // Transform forms to include sections data for frontend
+    const forms = user.FormSubmissions.map((form) => {
+      if (!form.totalScore) {
+        return {
+          ...form,
+          sections: [],
+          totalScore: 0,
+          maxScore: 0,
+        };
+      }
+
+      const sections = [
+        { name: 'Section 1', score: form.section1Score },
+        { name: 'Section 2', score: form.section2Score },
+        { name: 'Section 3', score: form.section3Score },
+        { name: 'Section 4', score: form.section4Score },
+        { name: 'Section 5', score: form.section5Score },
+      ];
+
+      return {
+        ...form,
+        sections,
+        totalScore: form.totalScore,
+        maxScore: 100, // Adjust to your scoring scale
+      };
+    });
+
+    return forms;
   }
 
   async getUserDashboardData(id: number) {
-    const data = await this.prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { id },
       select: {
-        Delegates: true,
-        FormSubmissions: true,
+        Delegates: {
+          select: {
+            name: true,
+            email: true,
+            department: true,
+            formSubmissionCode: true,
+            form: {
+              select: {
+                id: true,
+                completed: true,
+              },
+            },
+          },
+        },
         _count: {
           select: {
             Delegates: true,
@@ -85,7 +151,31 @@ export class UsersService {
         },
       },
     });
-    return data;
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const expectedDelegates = user._count.Delegates ?? 0;
+    const completedForms = (user.Delegates || []).filter(
+      (d) => d.form?.completed === true
+    ).length;
+
+    const delegates = (user.Delegates || []).map((d) => ({
+      name: d.name,
+      email: d.email,
+      department: d.department,
+      formSubmissionCode: d.formSubmissionCode,
+      hasSubmitted: d.form?.completed === true,
+      formId: d.form?.id ?? null,
+    }));
+
+    return {
+      expectedDelegates,
+      completedForms,
+      delegates,
+      _count: user._count, // keep for compatibility with existing frontend
+    };
   }
 
   update(id: number, updateUserDto: Prisma.UserUpdateInput) {

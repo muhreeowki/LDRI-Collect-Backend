@@ -3,9 +3,10 @@ import { FormsService } from './forms.service';
 import { FormsController } from './forms.controller';
 import { PrismaService } from '../prisma.service';
 import { DelegatesService } from '../delegates/delegates.service';
+import { UsersService } from '../users/users.service';
 
 @Module({
   controllers: [FormsController],
-  providers: [FormsService, PrismaService, DelegatesService],
+  providers: [FormsService, PrismaService, DelegatesService, UsersService],
 })
 export class FormsModule {}

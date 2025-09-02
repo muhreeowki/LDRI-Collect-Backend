@@ -24,6 +24,7 @@ export class AuthService {
     let user;
     // Check if the user is an admin
     user = await this.adminService.findOne(email);
+    console.log('user:', user);
     // Admin user found
     if (user !== null) {
       // Check if the password is correct
@@ -33,6 +34,7 @@ export class AuthService {
       isAdmin = true;
     } else {
       user = await this.usersService.findOne(email);
+      console.log('user:', user);
       if (user !== null && !user.valid) {
         throw new UnauthorizedException('User has not yet been validated');
       } else if (user === null || !bcrypt.compareSync(pass, user?.password)) {
@@ -40,7 +42,6 @@ export class AuthService {
       }
     }
     // Remove password from the user object before returning
-    const { password, ...result } = user;
     const payload = {
       sub: user.id,
       email: user.email,

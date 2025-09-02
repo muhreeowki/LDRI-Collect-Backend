@@ -22,11 +22,16 @@ export class NormalAuthGuard implements CanActivate {
     try {
       const payload = await this.jwtService.verifyAsync(token, {
         secret: jwtConstants.secret,
+        audience: 'ldri',
+        issuer: 'ldri',
+        algorithms: ['HS256'],
       });
       request['user'] = payload;
-    } catch {
+    } catch (error: any) {
+      Logger.error('Error verifying Normal token:', error);
       throw new UnauthorizedException('Invalid token');
     }
+    console.log('Passed Auth Guard');
     return true;
   }
 }
@@ -55,7 +60,7 @@ export class AdminAuthGuard implements CanActivate {
       request['admin'] = payload;
       Logger.debug('Admin payload:', payload);
     } catch (error: any) {
-      Logger.error('Error verifying token:', error);
+      Logger.error('Error verifying Admin token:', error);
       throw new UnauthorizedException('Invalid token');
     }
     return true;

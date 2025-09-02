@@ -1,14 +1,27 @@
-import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  UseGuards,
+  Patch,
+  Delete,
+  Request,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { FormsService } from './forms.service';
 import { Prisma } from '@prisma/client/ldri/index.js';
 import { AdminAuthGuard, NormalAuthGuard } from '../auth/auth.guard';
 import { DelegatesService } from '../delegates/delegates.service';
+import { UsersService } from '../users/users.service';
 
 @Controller('forms')
 export class FormsController {
   constructor(
     private readonly formsService: FormsService,
-    private readonly delegateService: DelegatesService
+    private readonly delegateService: DelegatesService,
+    private readonly usersService: UsersService
   ) {}
 
   @Post(':formSubmissionCode')
@@ -25,23 +38,26 @@ export class FormsController {
   }
 
   @Get()
-  //@UseGuards(AdminAuthGuard)
+  @UseGuards(NormalAuthGuard)
   findAll() {
     return this.formsService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.formsService.findOne(id);
+  @Get(':formId')
+  @UseGuards(NormalAuthGuard)
+  findOne(@Param('formId') formId: string, @Request() req: any) {
+    const userId = req.user.sub;
+    return this.formsService.findOne(formId, userId);
   }
 
   // @Patch(':id')
   // update(@Param('id') id: string, @Body() updateFormDto: UpdateFormDto) {
   //   return this.formsService.update(+id, updateFormDto);
   // }
-  //
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.formsService.remove(+id);
-  // }
+
+  @Delete(':id')
+  @UseGuards(NormalAuthGuard)
+  remove(@Param('id') id: string) {
+    return this.formsService.remove(id);
+  }
 }

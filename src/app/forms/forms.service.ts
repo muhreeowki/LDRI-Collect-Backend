@@ -10,25 +10,15 @@ export class FormsService {
     const form = this.prisma.form.create({
       data: {
         ...data,
+        completed: true,
         delegate: {
           connect: { formSubmissionCode: delegate.formSubmissionCode },
         },
         User: {
           connect: { id: delegate.userId },
         },
-        score: {
-          create: {
-            section1: 0,
-            section2: 0,
-            section3: 0,
-            section4: 0,
-            section5: 0,
-            total: 0,
-          },
-        },
       },
     });
-
     // TODO: send email to Supervisor with form submission code to view the completed form
     return form;
   }
@@ -39,10 +29,10 @@ export class FormsService {
     });
   }
 
-  findOne(id: string): Promise<Form | null> {
+  findOne(id: string, userId: number) {
     return this.prisma.form.findUnique({
-      where: { id },
-      include: { User: true, delegate: true, score: true },
+      where: { id, userId },
+      include: { User: true, delegate: true },
     });
   }
 
@@ -58,20 +48,6 @@ export class FormsService {
       where: {
         id,
       },
-    });
-  }
-
-  async updateScore(id: string, updateScoreDto: Prisma.ScoreUpdateInput) {
-    const form = await this.prisma.form.findUnique({ where: { id } });
-    if (!form) {
-      throw new Error('Form not found');
-    }
-    if (!form.scoreId) {
-      throw new Error('Form does not have an associated score');
-    }
-    return this.prisma.score.update({
-      where: { id: form.scoreId },
-      data: updateScoreDto,
     });
   }
 }
