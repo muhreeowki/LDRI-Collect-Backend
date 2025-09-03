@@ -66,7 +66,7 @@ export class UsersService {
   async getDelegates(id: number) {
     const user = await this.prisma.user.findUnique({
       where: { id },
-      include: { Delegates: true },
+      include: { Delegates: true, FormSubmissions: true },
       omit: {
         password: true,
       },
