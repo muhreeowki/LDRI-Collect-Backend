@@ -1,0 +1,137 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/@prisma/client/ldri"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Admin {
+  id       Int    @id @default(autoincrement())
+  name     String
+  email    String @unique
+  password String
+}
+
+// TODO: change to supervisor or manager or something more appropriate
+model User {
+  id              Int        @id @default(autoincrement())
+  name            String
+  sex             Sex
+  email           String     @unique
+  password        String
+  phone           String
+  nationalId      String     @unique
+  county          County
+  position        String
+  department      String
+  valid           Boolean    @default(false)
+  Delegates       Delegate[]
+  FormSubmissions Form[]
+}
+
+model Delegate {
+  formSubmissionCode String @id @unique
+  form               Form?
+  name               String
+  email              String @unique
+  phone              String
+  county             County
+  department         String
+  supervisor         User   @relation(fields: [userId], references: [id])
+  userId             Int
+}
+
+// TODO: change to form submission
+model Form {
+  id                 String    @id @unique @default(uuid())
+  formSubmissionCode String?   @unique
+  delegate           Delegate? @relation(fields: [formSubmissionCode], references: [formSubmissionCode])
+  submissionDate     DateTime  @default(now())
+  User               User?     @relation(fields: [userId], references: [id])
+  userId             Int?
+  completed          Boolean   @default(false)
+  totalScore         Int
+  section1Score      Int
+  section2Score      Int
+  section3Score      Int
+  section4Score      Int
+  section5Score      Int
+  // Section 1
+  Q_1_1              String
+  Q_1_2              String?
+  Q_1_3              String?
+  Q_1_4              String
+  Q_1_5              String
+  Q_1_5_a            String?
+  Q_1_6              String?
+  Q_1_7              String
+  // Section 2
+  Q_2_1              String
+  Q_2_2              String?
+  Q_2_2_a            String?
+  Q_2_3              String
+  Q_2_3_a            String?
+  Q_2_4              String
+  Q_2_4_a            String?
+  // Section 3
+  Q_3_1              String
+  Q_3_1_a            String?
+  Q_3_2              String
+  Q_3_2_a            String?
+  Q_3_3              String
+  Q_3_3_a            String?
+  // Section 4
+  Q_4_1              String
+  Q_4_1_a            String
+  Q_4_2              String
+  Q_4_2_a            String?
+  Q_4_3              String
+  Q_4_4              String
+  Q_4_4_a            String?
+  Q_4_5              String
+  Q_4_5_a            String?
+  Q_4_6              String
+  Q_4_6_a            String?
+  Q_4_7              String
+  Q_4_7_a            String?
+  Q_4_8              String
+  Q_4_8_a            String?
+  Q_4_9              String
+  Q_4_9_a            String?
+  Q_4_10             String
+  Q_4_10_a           String?
+  // Section 5
+  Q_5_1              String
+  Q_5_1_a            String?
+  Q_5_2              String
+  Q_5_2_a            String?
+  Q_5_3              String
+  Q_5_4              String
+  Q_5_4_a            String?
+  Q_5_5              String
+  Q_5_5_a            String?
+}
+
+enum Sex {
+  male
+  female
+  intersex
+}
+
+enum County {
+  embu
+  homabay
+  machakos
+  muranga
+  nairobi
+  tharakanithi
+}
