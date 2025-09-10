@@ -1,8 +1,7 @@
 {
+  "extends": "./tsconfig.base.json",
   "files": [],
-  "include": [
-    ".next/types/**/*.ts"
-  ],
+  "include": [".next/types/**/*.ts"],
   "references": [
     {
       "path": "./tsconfig.app.json"
@@ -24,7 +23,5 @@
       }
     ]
   },
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }

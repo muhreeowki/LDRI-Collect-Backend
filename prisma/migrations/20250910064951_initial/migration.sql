@@ -37,6 +37,7 @@ CREATE TABLE "Delegate" (
 CREATE TABLE "Form" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "formSubmissionCode" TEXT,
+    "submissionDate" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "userId" INTEGER,
     "completed" BOOLEAN NOT NULL DEFAULT false,
     "totalScore" INTEGER NOT NULL,

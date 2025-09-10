@@ -1,21 +1,25 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { CreateAdminDto } from './dto/create-admin.dto';
-import { UpdateAdminDto } from './dto/update-admin.dto';
-import { PrismaService } from '../prisma.service';
-import { Admin, Prisma } from '@prisma/client/ldri/index.js';
-import * as bcrypt from 'bcrypt';
+import { Injectable } from "@nestjs/common";
+import { PrismaService } from "../prisma.service";
+import { Prisma } from "@prisma/client/ldri/index.js";
+import * as bcrypt from "bcrypt";
 
 @Injectable()
 export class AdminService {
   constructor(private prisma: PrismaService) {}
 
   async create(createAdminDto: Prisma.AdminCreateInput) {
+    // Basic validation
+    if (!createAdminDto.email || createAdminDto.email.trim() === "") {
+      throw new Error("Email is required");
+    }
+    if (!createAdminDto.password || createAdminDto.password.trim() === "") {
+      throw new Error("Password is required");
+    }
+
     // hash the password before saving
     const salt = bcrypt.genSaltSync(5);
-    console.log('salt:', salt);
-    console.log('createUserDto:', createAdminDto);
 
-    let passwordHash = '';
+    let passwordHash = "";
     if (
       createAdminDto.password !== undefined &&
       createAdminDto.password !== null
@@ -43,8 +47,8 @@ export class AdminService {
   async isAdmin(idOrEmail: number | string): Promise<boolean> {
     const admin = await this.prisma.admin.findUnique({
       where: {
-        id: typeof idOrEmail === 'number' ? idOrEmail : undefined,
-        email: typeof idOrEmail === 'string' ? idOrEmail : undefined,
+        id: typeof idOrEmail === "number" ? idOrEmail : undefined,
+        email: typeof idOrEmail === "string" ? idOrEmail : undefined,
       },
     });
     return admin !== null;

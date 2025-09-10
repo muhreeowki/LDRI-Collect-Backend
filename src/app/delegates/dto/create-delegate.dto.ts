@@ -1,19 +1,19 @@
-import { IsString, IsNotEmpty } from 'class-validator';
+import { IsString, IsNotEmpty } from "class-validator";
 
 export class CreateDelegateDto {
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name!: string;
 
   @IsString()
   @IsNotEmpty()
-  email: string;
+  email!: string;
 
   @IsString()
   @IsNotEmpty()
-  phone: string;
+  phone!: string;
 
   @IsString()
   @IsNotEmpty()
-  department: string;
+  department!: string;
 }
