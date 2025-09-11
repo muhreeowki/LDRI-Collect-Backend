@@ -1,7 +1,7 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
-import { PrismaService } from "../prisma.service";
-import { Prisma, User } from "@prisma/client/ldri/index.js";
-import * as bcrypt from "bcrypt";
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { PrismaService } from '../prisma.service';
+import { Prisma, User } from '@prisma/client/ldri/index.js';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -10,10 +10,8 @@ export class UsersService {
   create(createUserDto: Prisma.UserCreateInput) {
     // hash the password before saving
     const salt = bcrypt.genSaltSync(5);
-    console.log("salt:", salt);
-    console.log("createUserDto:", createUserDto);
 
-    let passwordHash = "";
+    let passwordHash = '';
     if (
       createUserDto.password !== undefined ||
       createUserDto.password !== null
@@ -40,7 +38,7 @@ export class UsersService {
       omit: {
         password: true,
       },
-      orderBy: { id: "desc" },
+      orderBy: { id: 'desc' },
     });
   }
 
@@ -65,13 +63,14 @@ export class UsersService {
   async getDelegates(id: number) {
     const user = await this.prisma.user.findUnique({
       where: { id },
-      include: { Delegates: true, FormSubmissions: true },
-      omit: {
-        password: true,
+      select: {
+        Delegates: {
+          include: { form: true },
+        },
       },
     });
     if (user === null) {
-      throw new UnauthorizedException("User not found");
+      throw new UnauthorizedException('User not found');
     }
     return user.Delegates;
   }
@@ -91,7 +90,7 @@ export class UsersService {
       },
     });
     if (user === null) {
-      throw new UnauthorizedException("User not found");
+      throw new UnauthorizedException('User not found');
     }
 
     // Transform forms to include sections data for frontend
@@ -106,11 +105,11 @@ export class UsersService {
       }
 
       const sections = [
-        { name: "Section 1", score: form.section1Score },
-        { name: "Section 2", score: form.section2Score },
-        { name: "Section 3", score: form.section3Score },
-        { name: "Section 4", score: form.section4Score },
-        { name: "Section 5", score: form.section5Score },
+        { name: 'Section 1', score: form.section1Score },
+        { name: 'Section 2', score: form.section2Score },
+        { name: 'Section 3', score: form.section3Score },
+        { name: 'Section 4', score: form.section4Score },
+        { name: 'Section 5', score: form.section5Score },
       ];
 
       return {
@@ -152,7 +151,7 @@ export class UsersService {
     });
 
     if (!user) {
-      throw new UnauthorizedException("User not found");
+      throw new UnauthorizedException('User not found');
     }
 
     const expectedDelegates = user._count.Delegates ?? 0;
@@ -193,7 +192,6 @@ export class UsersService {
   }
 
   async validateUser(id: number): Promise<User> {
-    console.log("Validating user with ID:", id);
     const res = this.prisma.user.update({
       where: {
         id,
@@ -204,6 +202,7 @@ export class UsersService {
       },
     });
     // TODO: send email to user notifying them of validation
+    console.log(`User with ID ${id} has been validated.`);
     return res;
   }
 

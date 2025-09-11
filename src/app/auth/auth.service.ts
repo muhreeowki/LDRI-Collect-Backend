@@ -10,7 +10,7 @@ export class AuthService {
   constructor(
     private adminService: AdminService,
     private usersService: UsersService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
   ) {}
 
   // TODO: Test this
@@ -18,28 +18,28 @@ export class AuthService {
     let isAdmin = false;
     if (pass === '' || pass === undefined || pass === null) {
       throw new UnauthorizedException(
-        'Missing password. Please provide a password.'
+        'Missing password. Please provide a password.',
       );
     }
     let user;
     // Check if the user is an admin
     user = await this.adminService.findOne(email);
-    console.log('user:', user);
     // Admin user found
     if (user !== null) {
       // Check if the password is correct
       if (!bcrypt.compareSync(pass, user.password)) {
-        throw new UnauthorizedException('Wrong email or password');
+        throw new UnauthorizedException('Invalid credentials.');
       }
       isAdmin = true;
+      console.log('Loggin Admin:', user.email);
     } else {
       user = await this.usersService.findOne(email);
-      console.log('user:', user);
       if (user !== null && !user.valid) {
         throw new UnauthorizedException('User has not yet been validated');
       } else if (user === null || !bcrypt.compareSync(pass, user?.password)) {
         throw new UnauthorizedException('Wrong email or password');
       }
+      console.log('Loggin User:', user.email);
     }
     // Remove password from the user object before returning
     const payload = {

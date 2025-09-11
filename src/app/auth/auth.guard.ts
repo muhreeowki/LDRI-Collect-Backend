@@ -31,7 +31,6 @@ export class NormalAuthGuard implements CanActivate {
       Logger.error('Error verifying Normal token:', error);
       throw new UnauthorizedException('Invalid token');
     }
-    console.log('Passed Auth Guard');
     return true;
   }
 }
