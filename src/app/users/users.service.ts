@@ -1,4 +1,9 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { Prisma, User } from '@prisma/client/ldri/index.js';
 import * as bcrypt from 'bcrypt';
@@ -22,23 +27,28 @@ export class UsersService {
     ) {
       passwordHash = bcrypt.hashSync(createUserDto.password, salt);
     }
-    const user = await this.prisma.user.create({
-      data: { ...createUserDto, password: passwordHash },
-      omit: {
-        password: true,
-      },
-    });
+    try {
+      const user = await this.prisma.user.create({
+        data: { ...createUserDto, password: passwordHash },
+        omit: {
+          password: true,
+        },
+      });
 
-    // Send email to admin to validate the user.
-    const response = await this.mailer.sendMail({
-      from: '"LDRI Collect Backend" <serveys@stateofdata.org>',
-      to: process.env.ADMIN_EMAIL,
-      subject: 'New User Registration - Validation Required',
-      text: `A new user has registered with the email: ${user.email}. Please review and validate the account.`,
-    });
+      // Send email to admin to validate the user.
+      const response = await this.mailer.sendMail({
+        from: '"LDRI Collect Backend" <serveys@stateofdata.org>',
+        to: process.env.ADMIN_EMAIL,
+        subject: 'New User Registration - Validation Required',
+        text: `A new user has registered with the email: ${user.email}. Please review and validate the account.`,
+      });
 
-    Logger.log(`New user created: ${user.email}\n${response}`);
-    return user;
+      Logger.log(`New user created: ${user.email}\n${response}`);
+      return user;
+    } catch (error) {
+      Logger.error(`Error creating user: ${error}`);
+      throw new InternalServerErrorException('Error creating user');
+    }
   }
 
   findAll() {
@@ -203,25 +213,31 @@ export class UsersService {
   }
 
   async validateUser(id: number): Promise<User> {
-    const user = await this.prisma.user.update({
-      where: {
-        id,
-        valid: false, // Only update if the user is not already valid
-      },
-      data: {
-        valid: true,
-      },
-    });
-    // Send Email
-    const response = await this.mailer.sendMail({
-      from: '"LDRI Collect" <serveys@stateofdata.org>',
-      to: user.email,
-      subject: 'Account Successfully Validated',
-      text: `Hello ${user.name}, your account has been successfully validated. You can now log in to the LDRI Collect application.`,
-    });
+    try {
+      const user = await this.prisma.user.update({
+        where: {
+          id,
+          valid: false, // Only update if the user is not already valid
+        },
+        data: {
+          valid: true,
+        },
+      });
+      // Send Email
+      const response = await this.mailer.sendMail({
+        from: '"LDRI Collect" <serveys@stateofdata.org>',
+        to: user.email,
+        subject: 'Account Successfully Validated',
+        text: `Hello ${user.name}, your account has been successfully validated. You can now log in to the LDRI Collect application.`,
+      });
 
-    Logger.log(`User with ID ${id} has been validated.\n${response}`);
-    return user;
+      Logger.log(`User with ID ${id} has been validated.\n${response}`);
+      return user;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Error validating user with ID ${id}: ${error}`,
+      );
+    }
   }
 
   async isValidUser(id: number): Promise<boolean> {
