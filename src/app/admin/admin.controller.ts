@@ -1,8 +1,8 @@
-import { Controller, Get, Post, Body, Param } from "@nestjs/common";
-import { AdminService } from "./admin.service";
-import { Prisma } from "@prisma/client/ldri/index.js";
+import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { AdminService } from './admin.service';
+import { Prisma } from '@prisma/client/ldri/index.js';
 
-@Controller("admin")
+@Controller('admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
@@ -16,12 +16,11 @@ export class AdminController {
     return this.adminService.findAll();
   }
 
-  @Get(":id")
-  findOneById(@Param("id") id: string) {
+  @Get(':id')
+  findOneById(@Param('id') id: string) {
     return this.adminService.findOneById(+id);
   }
 
-  // TODO: Test this
   @Get()
   findOne(@Body() email: string) {
     return this.adminService.findOne(email);

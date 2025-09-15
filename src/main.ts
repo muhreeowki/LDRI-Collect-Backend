@@ -17,14 +17,14 @@ async function bootstrap() {
       whitelist: true, // strips properties that do not have decorators
       forbidNonWhitelisted: true,
       transform: true, // auto-transform payloads to DTO instances
-    })
+    }),
   );
   const globalPrefix = 'api';
   app.setGlobalPrefix(globalPrefix);
   const port = process.env.PORT || 4000;
   await app.listen(port);
   Logger.log(
-    `🚀 Application is running on: http://localhost:${port}/${globalPrefix}`
+    `🚀 Application is running on: http://localhost:${port}/${globalPrefix}`,
   );
 }
 

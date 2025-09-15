@@ -13,7 +13,6 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  // TODO: Test this
   async login(email: string, pass: string): Promise<any> {
     let isAdmin = false;
     if (pass === '' || pass === undefined || pass === null) {

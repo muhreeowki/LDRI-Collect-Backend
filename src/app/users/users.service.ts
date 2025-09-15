@@ -1,13 +1,17 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { Prisma, User } from '@prisma/client/ldri/index.js';
 import * as bcrypt from 'bcrypt';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private mailer: MailerService,
+  ) {}
 
-  create(createUserDto: Prisma.UserCreateInput) {
+  async create(createUserDto: Prisma.UserCreateInput) {
     // hash the password before saving
     const salt = bcrypt.genSaltSync(5);
 
@@ -18,15 +22,22 @@ export class UsersService {
     ) {
       passwordHash = bcrypt.hashSync(createUserDto.password, salt);
     }
-    const user = this.prisma.user.create({
+    const user = await this.prisma.user.create({
       data: { ...createUserDto, password: passwordHash },
       omit: {
         password: true,
       },
     });
 
-    // TODO: send email to admin to validate the user.
+    // Send email to admin to validate the user.
+    const response = await this.mailer.sendMail({
+      from: '"LDRI Collect Backend" <serveys@stateofdata.org>',
+      to: process.env.ADMIN_EMAIL,
+      subject: 'New User Registration - Validation Required',
+      text: `A new user has registered with the email: ${user.email}. Please review and validate the account.`,
+    });
 
+    Logger.log(`New user created: ${user.email}\n${response}`);
     return user;
   }
 
@@ -192,7 +203,7 @@ export class UsersService {
   }
 
   async validateUser(id: number): Promise<User> {
-    const res = this.prisma.user.update({
+    const user = await this.prisma.user.update({
       where: {
         id,
         valid: false, // Only update if the user is not already valid
@@ -201,9 +212,16 @@ export class UsersService {
         valid: true,
       },
     });
-    // TODO: send email to user notifying them of validation
-    console.log(`User with ID ${id} has been validated.`);
-    return res;
+    // Send Email
+    const response = await this.mailer.sendMail({
+      from: '"LDRI Collect" <serveys@stateofdata.org>',
+      to: user.email,
+      subject: 'Account Successfully Validated',
+      text: `Hello ${user.name}, your account has been successfully validated. You can now log in to the LDRI Collect application.`,
+    });
+
+    Logger.log(`User with ID ${id} has been validated.\n${response}`);
+    return user;
   }
 
   async isValidUser(id: number): Promise<boolean> {

@@ -1,16 +1,16 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { Prisma } from '@prisma/client/ldri/index.js';
 import { CreateDelegateDto } from './dto/create-delegate.dto';
 import { v4 as uuidv4 } from 'uuid';
-
-// TODO: When delegates are created, they should receive an email
-// with a link to fill in the bridge form. The email should include
-// a unique submission code that they will use to submit the form.
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class DelegatesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private mailer: MailerService,
+  ) {}
 
   async create(data: CreateDelegateDto, userId: number) {
     const user = await this.prisma.user.findUnique({
@@ -33,9 +33,15 @@ export class DelegatesService {
       data: delegate,
     });
 
-    // TODO: Send email to delegate with form submission code
-    console.log('Delegate created:', delegateCreated);
+    // Send email to delegate with form submission code
+    const response = await this.mailer.sendMail({
+      from: '"LDRI Collect" <serveys@stateofdata.org>',
+      to: delegateCreated.email,
+      subject: 'Welcome to LDRI Collect',
+      text: `Hello ${delegateCreated.name},\n\nYou have been registered as a delegate by ${user.name}. Your form submission code is ${formSubmissionCode}. Use this code to access and complete your form. Click the link below to access your form:\n\nhttps://dca.stateofdata/bridge-form\n\nThank you for your participation in the LDRI program!`,
+    });
 
+    Logger.log(`New user delegate: ${delegateCreated.email}\n${response}`);
     return delegateCreated;
   }
 
@@ -58,11 +64,22 @@ export class DelegatesService {
         userId: userId,
       };
     });
-    const delegatesCreated = await this.prisma.delegate.createMany({
+    const delegatesCreated = await this.prisma.delegate.createManyAndReturn({
       data: delegates,
     });
 
-    // TODO: Loop through created delegates and send emails with form submission codes
+    // Loop through created delegates and send emails with form submission codes
+    for (let i = 0; i < delegatesCreated.length; i++) {
+      const response = await this.mailer.sendMail({
+        from: '"LDRI Collect" <serveys@stateofdata.org>',
+        to: delegatesCreated[i].email,
+        subject: 'Welcome to LDRI Collect',
+        text: `Hello ${delegatesCreated[i].name},\n\nYou have been registered as a delegate by ${user.name}. Your form submission code is ${delegatesCreated[i].formSubmissionCode}. Use this code to access and complete your form. Click the link below to access your form:\n\nhttps://dca.stateofdata/bridge-form\n\nThank you for your participation in the LDRI program!`,
+      });
+      Logger.log(
+        `User ${user.email} Created a New Delegate: ${data[i].email}\n${response}`,
+      );
+    }
 
     return delegatesCreated;
   }

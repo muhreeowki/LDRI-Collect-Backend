@@ -43,7 +43,6 @@ export class AdminService {
     return this.prisma.admin.findUnique({ where: { id } });
   }
 
-  // TODO: Test this
   async isAdmin(idOrEmail: number | string): Promise<boolean> {
     const admin = await this.prisma.admin.findUnique({
       where: {

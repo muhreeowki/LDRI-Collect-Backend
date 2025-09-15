@@ -19,7 +19,7 @@ import { AdminService } from '../admin/admin.service';
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
-    private readonly adminService: AdminService
+    private readonly adminService: AdminService,
   ) {}
 
   @Post()
@@ -65,17 +65,20 @@ export class UsersController {
 
   @UseGuards(AdminAuthGuard)
   @Put('validate/:id')
-  async validateUser(@Param('id', ParseIntPipe) id: number, @Request() req: any) {
+  async validateUser(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req: any,
+  ) {
     const adminId = req.admin?.sub;
     if (!adminId) {
       throw new UnauthorizedException(
-        'You are not authorized to perform this action'
+        'You are not authorized to perform this action',
       );
     }
     const isAdmin = await this.adminService.isAdmin(adminId);
     if (!isAdmin) {
       throw new UnauthorizedException(
-        'You are not authorized to perform this action'
+        'You are not authorized to perform this action',
       );
     }
     return this.usersService.validateUser(id);
