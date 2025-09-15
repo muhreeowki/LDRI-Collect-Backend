@@ -10,10 +10,7 @@ export class FormsService {
     private mailer: MailerService,
   ) {}
 
-  async create(
-    data: Prisma.FormCreateInput,
-    delegate: Delegate,
-  ) {
+  async create(data: Prisma.FormCreateInput, delegate: Delegate) {
     const form = await this.prisma.form.create({
       data: {
         ...data,
@@ -35,11 +32,11 @@ export class FormsService {
       text: `Hello ${form.User?.name},\n\nA new form has been submitted by your delegate ${delegate.name}. You can view the completed form using the link below:\n\nhttps://dca.stateofdata.org/submissions/${form.id}\n\nThank you for your participation in the LDRI program!`,
     });
 
-    Logger.log(`New form submission: ${form.formSubmissionCode}\n${response}`);`);
+    Logger.log(`New form submission: ${form.formSubmissionCode}\n${response}`);
     return form;
   }
 
-  findAll(): Promise<Form[]> {
+  findAll() {
     return this.prisma.form.findMany({
       include: { User: true, delegate: true },
     });
