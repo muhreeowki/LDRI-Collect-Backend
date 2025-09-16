@@ -1,0 +1,88 @@
+services:
+  watchtower:
+    image: containrrr/watchtower
+    command:
+      - "--label-enable"
+      - "--interval"
+      - "60"
+      - "--rolling-restart"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/muh/.docker/config.json:/config.json
+
+  reverse-proxy:
+    image: traefik:v3.3
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entryPoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=muriuki@muchiri.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - letsencrypt:/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  backend:
+    image: ghcr.io/muhreeowki/ldri-collect-backend:latest
+    build:
+      context: ./LDRI-Collect-backend
+      dockerfile: Dockerfile
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`dca.stateofdata.org`) && (PathPrefix(`/api`) || PathPrefix(`/check`) || PathPrefix(`/static`))"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls.certresolver=myresolver"
+      - "com.centurylinklabs.watchtower.enable=true"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: file:./prisma/dev.db
+      PORT: 4000
+      ADMIN_EMAIL: "muriuki@muchiri.com"
+      ADMIN_PASSWORD: "adm1nPassword"
+      ADMIN_NAME: "Muriuki"
+      EMAIL_HOST: "smtp.dreamhost.com"
+      EMAIL_PORT: 587
+      EMAIL_PASSWORD: "capacity;2025"
+      EMAIL_USERNAME: "surveys@stateofdata.org"
+    ports:
+      - "4000:4000"
+    volumes:
+      - database_data:/app/prisma
+    command: sh -c "npx prisma migrate deploy && npm run start:prod"
+    restart: unless-stopped
+
+  frontend:
+    image: ghcr.io/muhreeowki/ldri-collect-frontend:latest
+
+    build:
+      context: ./LDRI-Collect-frontend
+      dockerfile: Dockerfile
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`dca.stateofdata.org`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=myresolver"
+      - "com.centurylinklabs.watchtower.enable=true"
+
+    environment:
+      NODE_ENV: production
+      API_URL: http://backend:4000/api
+      NEXT_PUBLIC_API_URL: http://backend:4000/api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  database_data:
+  letsencrypt:

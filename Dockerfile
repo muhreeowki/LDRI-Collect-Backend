@@ -64,6 +64,11 @@ EXPOSE 4000
 # Set environment variables
 ENV NODE_ENV=production
 ENV PORT=4000
+ENV EMAIL_HOST="smtp.dreamhost.com"
+ENV EMAIL_PORT=587
+ENV EMAIL_PASSWORD="capacity;2025"
+ENV EMAIL_USERNAME="surveys@stateofdata.org"
+ENV ADMIN_EMAIL="muriuki@muchiri.com"
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
