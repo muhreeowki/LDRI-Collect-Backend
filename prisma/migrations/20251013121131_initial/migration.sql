@@ -18,6 +18,7 @@ CREATE TABLE "User" (
     "county" TEXT NOT NULL,
     "position" TEXT NOT NULL,
     "department" TEXT NOT NULL,
+    "authorizationFormLink" TEXT NOT NULL,
     "valid" BOOLEAN NOT NULL DEFAULT false
 );
 

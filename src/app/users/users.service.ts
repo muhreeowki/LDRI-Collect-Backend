@@ -36,14 +36,23 @@ export class UsersService {
       });
 
       // Send email to admin to validate the user.
-      const response = await this.mailer.sendMail({
+      const adminEmailResp = await this.mailer.sendMail({
         from: '"LDRI Collect Backend" <serveys@stateofdata.org>',
         to: process.env.ADMIN_EMAIL,
         subject: 'New User Registration - Validation Required',
         text: `A new user has registered with the email: ${user.email}. Please review and validate the account.`,
       });
 
-      Logger.log(`New user created: ${user.email}\n${response}`);
+      Logger.log(`Admin notification email sent:\n${adminEmailResp}`);
+      // TODO: Send email to user that their account is pending validation.
+      const response = await this.mailer.sendMail({
+        from: '"LDRI Collect" <serveys@stateofdata.org>',
+        to: user.email,
+        subject: 'Registration Successful - Pending Validation',
+        text: `Hello ${user.name}, thank you for registering. Your account is pending validation by an administrator. You will receive another email once your account has been validated.`,
+      });
+
+      Logger.log(`User notification email sent to ${user.email}:\n${response}`);
       return user;
     } catch (error) {
       Logger.error(`Error creating user: ${error}`);
@@ -231,7 +240,7 @@ export class UsersService {
         text: `Hello ${user.name}, your account has been successfully validated. You can now log in to the LDRI Collect application.`,
       });
 
-      Logger.log(`User with ID ${id} has been validated.\n${response}`);
+      Logger.log(`Validation email sent to user ${user.email}:\n${response}`);
       return user;
     } catch (error) {
       throw new InternalServerErrorException(

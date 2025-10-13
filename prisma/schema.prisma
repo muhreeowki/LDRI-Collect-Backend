@@ -23,19 +23,20 @@ model Admin {
 
 // TODO: change to supervisor or manager or something more appropriate
 model User {
-  id              Int        @id @default(autoincrement())
-  name            String
-  sex             Sex
-  email           String     @unique
-  password        String
-  phone           String
-  nationalId      String     @unique
-  county          County
-  position        String
-  department      String
-  valid           Boolean    @default(false)
-  Delegates       Delegate[]
-  FormSubmissions Form[]
+  id                    Int        @id @default(autoincrement())
+  name                  String
+  sex                   Sex
+  email                 String     @unique
+  password              String
+  phone                 String
+  nationalId            String     @unique
+  county                County
+  position              String
+  department            String
+  authorizationFormLink String
+  valid                 Boolean    @default(false)
+  Delegates             Delegate[]
+  FormSubmissions       Form[]
 }
 
 model Delegate {
