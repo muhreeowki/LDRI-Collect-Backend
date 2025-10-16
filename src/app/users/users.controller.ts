@@ -28,9 +28,21 @@ export class UsersController {
   }
 
   @Get()
-  @UseGuards(NormalAuthGuard)
+  @UseGuards(AdminAuthGuard)
   findAll() {
     return this.usersService.findAll();
+  }
+
+  @Get('pending')
+  @UseGuards(AdminAuthGuard)
+  findAllPending() {
+    return this.usersService.findAllPending();
+  }
+
+  @Get('profile')
+  @UseGuards(NormalAuthGuard)
+  async getUserProfile(@Request() req: any) {
+    return await this.usersService.findOneById(req.user.sub);
   }
 
   @Get('delegates')
@@ -86,7 +98,7 @@ export class UsersController {
 
   // Keep parameterized route last so it doesn't catch specific routes like 'forms'/'delegates'
   @Get(':id')
-  @UseGuards(NormalAuthGuard)
+  @UseGuards(AdminAuthGuard)
   findOneById(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.findOneById(id);
   }

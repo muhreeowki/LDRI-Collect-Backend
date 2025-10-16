@@ -8,28 +8,28 @@ import {
   //Patch,
   Delete,
   Request,
-} from "@nestjs/common";
-import { FormsService } from "./forms.service";
-import { Prisma } from "@prisma/client/ldri/index.js";
-import { NormalAuthGuard } from "../auth/auth.guard";
-import { DelegatesService } from "../delegates/delegates.service";
+} from '@nestjs/common';
+import { FormsService } from './forms.service';
+import { Prisma } from '@prisma/client/ldri/index.js';
+import { AdminAuthGuard, NormalAuthGuard } from '../auth/auth.guard';
+import { DelegatesService } from '../delegates/delegates.service';
 
-@Controller("forms")
+@Controller('forms')
 export class FormsController {
   constructor(
     private readonly formsService: FormsService,
     private readonly delegateService: DelegatesService,
   ) {}
 
-  @Post(":formSubmissionCode")
+  @Post(':formSubmissionCode')
   async create(
     @Body() data: Prisma.FormCreateInput,
-    @Param("formSubmissionCode") formSubmissionCode: string,
+    @Param('formSubmissionCode') formSubmissionCode: string,
   ) {
     // Get the delegate with the formSubmissionCode
     const delegate = await this.delegateService.findOne(formSubmissionCode);
     if (!delegate) {
-      throw new Error("Delegate not found with the provided submission code");
+      throw new Error('Delegate not found with the provided submission code');
     }
     return this.formsService.create(data, delegate);
   }
@@ -40,21 +40,23 @@ export class FormsController {
     return this.formsService.findAll();
   }
 
-  @Get(":formId")
+  @Get('user/:formId')
   @UseGuards(NormalAuthGuard)
-  findOne(@Param("formId") formId: string, @Request() req: any) {
+  findOneUser(@Param('formId') formId: string, @Request() req: any) {
     const userId = req.user.sub;
-    return this.formsService.findOne(formId, userId);
+    return this.formsService.userFindOne(formId, userId);
   }
 
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateFormDto: UpdateFormDto) {
-  //   return this.formsService.update(+id, updateFormDto);
-  // }
+  @Get(':formId')
+  @UseGuards(AdminAuthGuard)
+  findOneAdmin(@Param('formId') formId: string) {
+    return this.formsService.adminFindOne(formId);
+  }
 
-  @Delete(":id")
+  @Delete(':id')
   @UseGuards(NormalAuthGuard)
-  remove(@Param("id") id: string) {
-    return this.formsService.remove(id);
+  remove(@Param('id') id: string, @Request() req: any) {
+    const userId = req.user.sub;
+    return this.formsService.remove(id, userId);
   }
 }

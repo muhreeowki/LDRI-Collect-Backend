@@ -85,11 +85,20 @@ export class DelegatesService {
   }
 
   findAll() {
-    return this.prisma.delegate.findMany();
+    return this.prisma.delegate.findMany({
+      include: { supervisor: true, form: true },
+    });
   }
 
   findOne(formSubmissionCode: string) {
     return this.prisma.delegate.findUnique({
+      where: { formSubmissionCode },
+      include: { supervisor: true, form: true },
+    });
+  }
+
+  delete(formSubmissionCode: string) {
+    return this.prisma.delegate.delete({
       where: { formSubmissionCode },
     });
   }

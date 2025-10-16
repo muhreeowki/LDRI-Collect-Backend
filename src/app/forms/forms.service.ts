@@ -42,11 +42,22 @@ export class FormsService {
     });
   }
 
-  findOne(id: string, userId: number) {
-    return this.prisma.form.findUnique({
+  async userFindOne(id: string, userId: number) {
+    const resp = await this.prisma.form.findUnique({
       where: { id, userId },
       include: { User: true, delegate: true },
     });
+    console.log('User Find One: ', resp);
+    return resp;
+  }
+
+  async adminFindOne(id: string) {
+    const resp = await this.prisma.form.findUnique({
+      where: { id },
+      include: { User: true, delegate: true },
+    });
+    console.log('Admin Find One: ', resp);
+    return resp;
   }
 
   update(id: string, updateFormDto: Prisma.FormUpdateInput) {
@@ -56,10 +67,11 @@ export class FormsService {
     });
   }
 
-  remove(id: string) {
+  remove(id: string, userId: number) {
     return this.prisma.form.delete({
       where: {
         id,
+        userId,
       },
     });
   }

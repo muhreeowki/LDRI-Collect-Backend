@@ -16,7 +16,7 @@ export class AdminController {
     return this.adminService.findAll();
   }
 
-  @Get(':id')
+  @Get('/find/:id')
   findOneById(@Param('id') id: string) {
     return this.adminService.findOneById(+id);
   }
@@ -24,5 +24,10 @@ export class AdminController {
   @Get()
   findOne(@Body() email: string) {
     return this.adminService.findOne(email);
+  }
+
+  @Get('/dashboard')
+  getDashboardStats() {
+    return this.adminService.getDashboardStats();
   }
 }

@@ -7,9 +7,10 @@ import {
   UseGuards,
   Request,
   UnauthorizedException,
+  Delete,
 } from '@nestjs/common';
 import { DelegatesService } from './delegates.service';
-import { NormalAuthGuard } from '../auth/auth.guard';
+import { AdminAuthGuard, NormalAuthGuard } from '../auth/auth.guard';
 import { CreateDelegateDto } from './dto/create-delegate.dto';
 
 @Controller('delegates')
@@ -30,7 +31,7 @@ export class DelegatesController {
   @Post('many')
   createMany(
     @Body() createDelegateDto: CreateDelegateDto[],
-    @Request() req: any
+    @Request() req: any,
   ) {
     const user = req.user || undefined;
     if (!user) {
@@ -39,14 +40,22 @@ export class DelegatesController {
     return this.delegatesService.createMany(createDelegateDto, user.sub);
   }
 
+  @UseGuards(AdminAuthGuard)
   @Get()
   findAll() {
     return this.delegatesService.findAll();
   }
 
+  @UseGuards(NormalAuthGuard)
   @Get(':formSubmissionCode')
   findOne(@Param('formSubmissionCode') formSubmissionCode: string) {
     return this.delegatesService.findOne(formSubmissionCode);
+  }
+
+  @UseGuards(NormalAuthGuard)
+  @Delete(':formSubmissionCode')
+  delete(@Param('formSubmissionCode') formSubmissionCode: string) {
+    return this.delegatesService.delete(formSubmissionCode);
   }
 
   @Post('verify')

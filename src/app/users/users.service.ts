@@ -72,6 +72,19 @@ export class UsersService {
     });
   }
 
+  findAllPending() {
+    return this.prisma.user.findMany({
+      include: {
+        _count: true,
+      },
+      omit: {
+        password: true,
+      },
+      orderBy: { id: 'desc' },
+      where: { valid: false },
+    });
+  }
+
   findOne(email: string) {
     return this.prisma.user.findFirst({
       where: { email: email },
@@ -85,6 +98,8 @@ export class UsersService {
     return this.prisma.user.findUnique({
       where: { id: id },
       include: {
+        Delegates: true,
+        FormSubmissions: true,
         _count: true,
       },
     });
@@ -163,6 +178,7 @@ export class UsersService {
             email: true,
             department: true,
             formSubmissionCode: true,
+            county: true,
             form: {
               select: {
                 id: true,
@@ -184,7 +200,7 @@ export class UsersService {
       throw new UnauthorizedException('User not found');
     }
 
-    const expectedDelegates = user._count.Delegates ?? 0;
+    const totalDelegates = user._count.Delegates ?? 0;
     const completedForms = (user.Delegates || []).filter(
       (d) => d.form?.completed === true,
     ).length;
@@ -199,10 +215,10 @@ export class UsersService {
     }));
 
     return {
-      expectedDelegates,
+      expectedDelegates: totalDelegates,
       completedForms,
       delegates,
-      _count: user._count, // keep for compatibility with existing frontend
+      _count: user._count,
     };
   }
 
