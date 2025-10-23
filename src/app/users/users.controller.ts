@@ -9,6 +9,7 @@ import {
   Request,
   UnauthorizedException,
   ParseIntPipe,
+  Delete,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { Prisma } from '@prisma/client/ldri/index.js';
@@ -97,6 +98,12 @@ export class UsersController {
   }
 
   // Keep parameterized route last so it doesn't catch specific routes like 'forms'/'delegates'
+  @Delete(':id')
+  @UseGuards(AdminAuthGuard)
+  deleteUser(@Param('id', ParseIntPipe) id: number) {
+    return this.usersService.delete(id);
+  }
+
   @Get(':id')
   @UseGuards(AdminAuthGuard)
   findOneById(@Param('id', ParseIntPipe) id: number) {

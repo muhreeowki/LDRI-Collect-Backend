@@ -222,7 +222,7 @@ export class UsersService {
     });
   }
 
-  remove(id: number) {
+  delete(id: number) {
     return this.prisma.user.delete({
       where: {
         id,
