@@ -1,7 +1,6 @@
 import {
   Injectable,
   InternalServerErrorException,
-  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
@@ -50,8 +49,7 @@ export class UsersService {
       });
       return user;
     } catch (error) {
-      Logger.error(`Error creating user: ${error}`);
-      throw new InternalServerErrorException('Error creating user');
+      throw new InternalServerErrorException('Error creating user.');
     }
   }
 
@@ -253,7 +251,7 @@ export class UsersService {
       return user;
     } catch (error) {
       throw new InternalServerErrorException(
-        `Error validating user with ID ${id}: ${error}`,
+        `Error validating user with ID ${id}`,
       );
     }
   }

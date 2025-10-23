@@ -27,8 +27,11 @@ export class NormalAuthGuard implements CanActivate {
         algorithms: ['HS256'],
       });
       request['user'] = payload;
-    } catch (error: any) {
-      Logger.error('Error verifying Normal token:', error);
+    } catch (e: any) {
+      Logger.error(
+        `Error verifying User token: ${e.message}`,
+        'AdminAuthGuard',
+      );
       throw new UnauthorizedException('Invalid token');
     }
     return true;
@@ -57,9 +60,11 @@ export class AdminAuthGuard implements CanActivate {
         throw new UnauthorizedException('Access denied');
       }
       request['admin'] = payload;
-      Logger.debug('Admin payload:', payload);
-    } catch (error: any) {
-      Logger.error('Error verifying Admin token:', error);
+    } catch (e: any) {
+      Logger.error(
+        `Error verifying Admin token: ${e.message}`,
+        'AdminAuthGuard',
+      );
       throw new UnauthorizedException('Invalid token');
     }
     return true;

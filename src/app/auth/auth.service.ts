@@ -47,7 +47,6 @@ export class AuthService {
       name: user.name,
       isAdmin,
     };
-    Logger.debug('User Logged In:', payload);
     return {
       accessToken: await this.jwtService.signAsync(payload, {
         secret: jwtConstants.secret,
