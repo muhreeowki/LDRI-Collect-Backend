@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client/ldri/client.js';
 import * as bcrypt from 'bcrypt';
 
@@ -29,7 +29,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
           name: adminName,
         },
       });
-      console.log(`Admin user: ${user}`);
+      Logger.log(`Admin user ensured: ${user.email}`, 'PrismaService');
     } catch (error) {
       // Intentionally swallow to avoid crashing app due to seed issues
       console.error(error);

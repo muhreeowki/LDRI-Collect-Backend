@@ -7,13 +7,13 @@ import {
 import { PrismaService } from '../prisma.service';
 import { Prisma, User } from '@prisma/client/ldri/index.js';
 import * as bcrypt from 'bcrypt';
-import { MailerService } from '@nestjs-modules/mailer';
+import { MailQueueProducer } from '../queue/queue.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     private prisma: PrismaService,
-    private mailer: MailerService,
+    private mailer: MailQueueProducer,
   ) {}
 
   async create(createUserDto: Prisma.UserCreateInput) {
@@ -34,25 +34,20 @@ export class UsersService {
           password: true,
         },
       });
-
       // Send email to admin to validate the user.
-      const adminEmailResp = await this.mailer.sendMail({
+      this.mailer.sendMail({
         from: '"LDRI Collect Backend" <serveys@stateofdata.org>',
         to: process.env.ADMIN_EMAIL,
         subject: 'New User Registration - Validation Required',
         text: `A new user has registered with the email: ${user.email}. Please review and validate the account.`,
       });
-
-      Logger.log(`Admin notification email sent:\n${adminEmailResp}`);
-      // TODO: Send email to user that their account is pending validation.
-      const response = await this.mailer.sendMail({
+      // Send email to user that their account is pending validation.
+      this.mailer.sendMail({
         from: '"LDRI Collect" <serveys@stateofdata.org>',
         to: user.email,
         subject: 'Registration Successful - Pending Validation',
         text: `Hello ${user.name}, thank you for registering. Your account is pending validation by an administrator. You will receive another email once your account has been validated.`,
       });
-
-      Logger.log(`User notification email sent to ${user.email}:\n${response}`);
       return user;
     } catch (error) {
       Logger.error(`Error creating user: ${error}`);
@@ -249,14 +244,12 @@ export class UsersService {
         },
       });
       // Send Email
-      const response = await this.mailer.sendMail({
+      this.mailer.sendMail({
         from: '"LDRI Collect" <serveys@stateofdata.org>',
         to: user.email,
         subject: 'Account Successfully Validated',
         text: `Hello ${user.name}, your account has been successfully validated. You can now log in to the LDRI Collect application.`,
       });
-
-      Logger.log(`Validation email sent to user ${user.email}:\n${response}`);
       return user;
     } catch (error) {
       throw new InternalServerErrorException(

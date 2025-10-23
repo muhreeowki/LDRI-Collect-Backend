@@ -1,13 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
+import { MailQueueProducer } from '../queue/queue.service';
 import { Delegate, Prisma } from '@prisma/client/ldri/index.js';
-import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class FormsService {
   constructor(
     private prisma: PrismaService,
-    private mailer: MailerService,
+    private mailer: MailQueueProducer,
   ) {}
 
   async create(data: Prisma.FormCreateInput, delegate: Delegate) {
@@ -25,14 +25,13 @@ export class FormsService {
       include: { User: true, delegate: true },
     });
     // Send email to Supervisor with form submission code to view the completed form
-    const response = await this.mailer.sendMail({
+    this.mailer.sendMail({
       from: '"LDRI Collect" <serveys@stateofdata.org>',
       to: form.User?.email,
       subject: 'New Form Submission',
       text: `Hello ${form.User?.name},\n\nA new form has been submitted by your delegate ${delegate.name}. You can view the completed form using the link below:\n\nhttps://dca.stateofdata.org/submissions/${form.id}\n\nThank you for your participation in the LDRI program!`,
     });
 
-    Logger.log(`New form submission: ${form.formSubmissionCode}\n${response}`);
     return form;
   }
 
@@ -47,7 +46,6 @@ export class FormsService {
       where: { id, userId },
       include: { User: true, delegate: true },
     });
-    console.log('User Find One: ', resp);
     return resp;
   }
 
@@ -56,7 +54,6 @@ export class FormsService {
       where: { id },
       include: { User: true, delegate: true },
     });
-    console.log('Admin Find One: ', resp);
     return resp;
   }
 

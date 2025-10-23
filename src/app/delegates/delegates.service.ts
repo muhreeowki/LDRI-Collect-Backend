@@ -3,13 +3,13 @@ import { PrismaService } from '../prisma.service';
 import { Prisma } from '@prisma/client/ldri/index.js';
 import { CreateDelegateDto } from './dto/create-delegate.dto';
 import { v4 as uuidv4 } from 'uuid';
-import { MailerService } from '@nestjs-modules/mailer';
+import { MailQueueProducer } from '../queue/queue.service';
 
 @Injectable()
 export class DelegatesService {
   constructor(
     private prisma: PrismaService,
-    private mailer: MailerService,
+    private mailer: MailQueueProducer,
   ) {}
 
   async create(data: CreateDelegateDto, userId: number) {
@@ -34,14 +34,12 @@ export class DelegatesService {
     });
 
     // Send email to delegate with form submission code
-    const response = await this.mailer.sendMail({
+    this.mailer.sendMail({
       from: '"LDRI Collect" <serveys@stateofdata.org>',
       to: delegateCreated.email,
       subject: 'Welcome to LDRI Collect',
       text: `Hello ${delegateCreated.name},\n\nYou have been registered as a delegate by ${user.name}. Your form submission code is ${formSubmissionCode}. Use this code to access and complete your form. Click the link below to access your form:\n\nhttps://dca.stateofdata/bridge-form\n\nThank you for your participation in the LDRI program!`,
     });
-
-    Logger.log(`New user delegate: ${delegateCreated.email}\n${response}`);
     return delegateCreated;
   }
 
@@ -70,15 +68,12 @@ export class DelegatesService {
 
     // Loop through created delegates and send emails with form submission codes
     for (let i = 0; i < delegatesCreated.length; i++) {
-      const response = await this.mailer.sendMail({
+      this.mailer.sendMail({
         from: '"LDRI Collect" <serveys@stateofdata.org>',
         to: delegatesCreated[i].email,
         subject: 'Welcome to LDRI Collect',
         text: `Hello ${delegatesCreated[i].name},\n\nYou have been registered as a delegate by ${user.name}. Your form submission code is ${delegatesCreated[i].formSubmissionCode}. Use this code to access and complete your form. Click the link below to access your form:\n\nhttps://dca.stateofdata/bridge-form\n\nThank you for your participation in the LDRI program!`,
       });
-      Logger.log(
-        `User ${user.email} Created a New Delegate: ${data[i].email}\n${response}`,
-      );
     }
 
     return delegatesCreated;
@@ -104,7 +99,6 @@ export class DelegatesService {
   }
 
   async verifyCode(formSubmissionCode: string) {
-    console.log('Verifying code:', formSubmissionCode);
     const delegate = await this.prisma.delegate.findUnique({
       where: { formSubmissionCode: formSubmissionCode },
     });

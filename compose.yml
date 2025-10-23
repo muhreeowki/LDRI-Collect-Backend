@@ -31,6 +31,16 @@ services:
       - letsencrypt:/letsencrypt
       - /var/run/docker.sock:/var/run/docker.sock
 
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/redis
+    environment:
+      - REDIS_PASSWORD=my-password
+
   backend:
     image: ghcr.io/muhreeowki/ldri-collect-backend:latest
     build:
@@ -53,6 +63,8 @@ services:
       EMAIL_PORT: 587
       EMAIL_PASSWORD: "capacity;2025"
       EMAIL_USERNAME: "surveys@stateofdata.org"
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     ports:
       - "4000:4000"
     volumes:
@@ -62,7 +74,6 @@ services:
 
   frontend:
     image: ghcr.io/muhreeowki/ldri-collect-frontend:latest
-
     build:
       context: ./LDRI-Collect-frontend
       dockerfile: Dockerfile
@@ -72,7 +83,6 @@ services:
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=myresolver"
       - "com.centurylinklabs.watchtower.enable=true"
-
     environment:
       NODE_ENV: production
       API_URL: http://backend:4000/api
@@ -84,5 +94,6 @@ services:
     restart: unless-stopped
 
 volumes:
+  redis_data:
   database_data:
   letsencrypt:

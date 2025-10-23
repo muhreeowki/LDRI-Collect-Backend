@@ -30,7 +30,7 @@ export class AuthService {
         throw new UnauthorizedException('Invalid credentials.');
       }
       isAdmin = true;
-      console.log('Loggin Admin:', user.email);
+      Logger.log(`Admin Logged In: ${user.email}`, 'AuthService');
     } else {
       user = await this.usersService.findOne(email);
       if (user !== null && !user.valid) {
@@ -38,7 +38,7 @@ export class AuthService {
       } else if (user === null || !bcrypt.compareSync(pass, user?.password)) {
         throw new UnauthorizedException('Wrong email or password');
       }
-      console.log('Loggin User:', user.email);
+      Logger.log(`User Logged In: ${user.email}`, 'AuthService');
     }
     // Remove password from the user object before returning
     const payload = {

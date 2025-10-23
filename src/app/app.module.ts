@@ -6,6 +6,8 @@ import { AuthModule } from './auth/auth.module';
 import { DelegatesModule } from './delegates/delegates.module';
 import { AdminModule } from './admin/admin.module';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { BullModule } from '@nestjs/bullmq';
+import { QueueModule } from './queue/queue.module';
 
 @Module({
   imports: [
@@ -15,6 +17,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
     AuthModule,
     DelegatesModule,
     AdminModule,
+    QueueModule,
     MailerModule.forRoot({
       transport: {
         host: process.env.EMAIL_HOST,
@@ -28,6 +31,5 @@ import { MailerModule } from '@nestjs-modules/mailer';
     }),
   ],
   controllers: [],
-  providers: [],
 })
 export class AppModule {}
